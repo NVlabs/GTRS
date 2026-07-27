@@ -13,20 +13,17 @@ from navsim.planning.simulation.planner.pdm_planner.utils.pdm_geometry_utils imp
 from navsim.planning.utils.multithreading.worker_ray_no_torch import RayDistributedNoTorch
 
 
-def get_local_ego_poses(scenarios):
-    results = []
+def get_local_ego_poses(scenario):
     thread_id = str(uuid.uuid4())
-    for idx, scenario in enumerate(scenarios):
-        print(
-            f"Processing scenario {idx + 1} / {len(scenarios)} in thread_id={thread_id}"
-        )
-        init_ego_state = scenario.initial_ego_state
-        future_traj = scenario.get_ego_future_trajectory(0, 4)
-        local_ego_poses = convert_absolute_to_relative_se2_array(
-            init_ego_state.rear_axle, np.array([tmp.rear_axle.serialize() for tmp in future_traj], dtype=np.float64)
-        )
-        results.append(local_ego_poses[None].astype(np.float32))
-    return results
+    print(
+        f"Processing scenario in thread_id={thread_id}"
+    )
+    init_ego_state = scenario.initial_ego_state
+    future_traj = scenario.get_ego_future_trajectory(0, 4)
+    local_ego_poses = convert_absolute_to_relative_se2_array(
+        init_ego_state.rear_axle, np.array([tmp.rear_axle.serialize() for tmp in future_traj], dtype=np.float64)
+    )
+    return local_ego_poses[None].astype(np.float32)
 
 
 def main():
@@ -35,7 +32,7 @@ def main():
 
     split = 'trainval'
     logs = os.listdir(f'{root}/nuplan/nuplan-v1.1/splits/{split}')
-    logs = [tmp.replace('.db', '') for tmp in logs]
+    logs = [tmp.replace('.db', '') for tmp in logs if tmp.endswith('.db')]
     start_idx = 0
     end_idx = 700000
     os.makedirs(save_dir, exist_ok=True)
